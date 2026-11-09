@@ -2,7 +2,7 @@
 set -e
 
 echo "=========================================================="
-echo " Starting Cakrawala Digital Library (Koyeb Deployment)"
+echo " Starting Cakrawala Digital Library (Production Deployment)"
 echo "=========================================================="
 
 echo "--> 1. Clearing config & route cache..."
@@ -19,5 +19,6 @@ php artisan migrate --force || true
 echo "--> 4. Seeding default data if empty..."
 php artisan db:seed --force || true
 
-echo "--> 5. Starting FrankenPHP web server on port ${PORT:-8000}..."
-exec frankenphp php-server -l 0.0.0.0:${PORT:-8000} -r public/
+PORT_LISTEN="${PORT:-8000}"
+echo "--> 5. Starting FrankenPHP web server on port ${PORT_LISTEN}..."
+exec frankenphp php-server -l :${PORT_LISTEN} -r public/

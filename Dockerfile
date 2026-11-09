@@ -1,5 +1,8 @@
 FROM dunglas/frankenphp:php8.3-alpine
 
+# Install Composer binary from official image
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 # Install PHP extensions required by Laravel & PostgreSQL
 RUN install-php-extensions \
     pdo_pgsql \
@@ -10,8 +13,8 @@ RUN install-php-extensions \
     opcache \
     pcntl
 
-# Install dos2unix to prevent Windows CRLF issues
-RUN apk add --no-cache dos2unix
+# Install system dependencies (git for composer, dos2unix for Windows CRLF line endings)
+RUN apk add --no-cache dos2unix git
 
 WORKDIR /app
 
@@ -28,6 +31,6 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache && \
     chmod -R 777 storage bootstrap/cache
 
-EXPOSE 8000
+EXPOSE 8000 10000
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
