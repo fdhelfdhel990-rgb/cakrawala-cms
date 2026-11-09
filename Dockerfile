@@ -1,5 +1,9 @@
 FROM dunglas/frankenphp:php8.3-alpine
 
+# Set environment variables for Composer
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_HOME=/composer
+
 # Install Composer binary from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -11,7 +15,9 @@ RUN install-php-extensions \
     intl \
     zip \
     opcache \
-    pcntl
+    pcntl \
+    bcmath \
+    mbstring
 
 # Install system dependencies (git for composer, dos2unix for Windows CRLF line endings)
 RUN apk add --no-cache dos2unix git
@@ -24,8 +30,14 @@ COPY . /app
 # Ensure entrypoint script has execution permissions and LF line endings
 RUN dos2unix /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
-# Install composer production dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install composer production dependencies without running artisan scripts during build
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts \
+    --ignore-platform-reqs
 
 # Set up writable permissions for Laravel storage and cache
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache && \
