@@ -30,5 +30,5 @@ if frankenphp --version > /dev/null 2>&1; then
     exec frankenphp php-server -l :${PORT_LISTEN} -r public/
 else
     echo "--> [Notice] FrankenPHP binary restricted, falling back to Laravel native server..."
-    exec php artisan serve --host=0.0.0.0 --port=${PORT_LISTEN}
+    exec php -d upload_max_filesize=100M -d post_max_size=120M -d memory_limit=256M artisan serve --host=0.0.0.0 --port=${PORT_LISTEN}
 fi

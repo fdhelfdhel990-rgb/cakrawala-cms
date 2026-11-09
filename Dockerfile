@@ -24,6 +24,11 @@ RUN apk add --no-cache dos2unix git libcap && \
     (setcap -r /usr/local/bin/frankenphp 2>/dev/null || true) && \
     (setcap -r $(which frankenphp) 2>/dev/null || true)
 
+# Configure PHP upload limits (100MB PDF uploads) for FrankenPHP and CLI
+RUN printf "upload_max_filesize = 100M\npost_max_size = 120M\nmemory_limit = 256M\nmax_execution_time = 300\nmax_input_time = 300\n" > "$PHP_INI_DIR/conf.d/99-uploads.ini" && \
+    mkdir -p /etc/frankenphp && \
+    cp "$PHP_INI_DIR/conf.d/99-uploads.ini" /etc/frankenphp/php.ini
+
 WORKDIR /app
 
 # Copy application files
