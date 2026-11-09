@@ -33,6 +33,17 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        User::updateOrCreate(
+            ['email' => 'fdhelfdhel990@gmail.com'],
+            [
+                'name' => 'Fadhel',
+                'password' => Hash::make('password123'),
+                'role' => 'admin',
+                'admin_level' => 'super_admin',
+                'avatar' => null,
+            ]
+        );
+
         User::firstOrCreate(
             ['email' => 'pustakawan@cakrawala.id'],
             [
