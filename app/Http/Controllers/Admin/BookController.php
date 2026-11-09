@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Category;
+use App\Services\StorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -104,7 +105,7 @@ class BookController extends Controller
         try {
             $coverPath = null;
             if ($request->hasFile('cover_file') && $request->file('cover_file')->isValid()) {
-                $coverPath = $request->file('cover_file')->store('covers', 'public');
+                $coverPath = StorageService::storeCover($request->file('cover_file'));
             }
 
             $pdfPath = null;
@@ -119,7 +120,7 @@ class BookController extends Controller
                         $validated['file_size'] = '25.6 MB';
                     }
                 }
-                $pdfPath = $pdfFile->store('books', 'public');
+                $pdfPath = StorageService::storePdf($pdfFile);
             }
 
             Book::create([
@@ -213,17 +214,13 @@ class BookController extends Controller
         try {
             $coverPath = $book->cover_image;
             if ($request->hasFile('cover_file') && $request->file('cover_file')->isValid()) {
-                if ($book->cover_image && ! Str::startsWith($book->cover_image, ['http://', 'https://'])) {
-                    Storage::disk('public')->delete($book->cover_image);
-                }
-                $coverPath = $request->file('cover_file')->store('covers', 'public');
+                StorageService::deleteFile($book->cover_image);
+                $coverPath = StorageService::storeCover($request->file('cover_file'));
             }
 
             $pdfPath = $book->file_path;
             if ($request->hasFile('pdf_file') && $request->file('pdf_file')->isValid()) {
-                if ($book->file_path && ! Str::startsWith($book->file_path, ['http://', 'https://'])) {
-                    Storage::disk('public')->delete($book->file_path);
-                }
+                StorageService::deleteFile($book->file_path);
                 $pdfFile = $request->file('pdf_file');
                 if (empty($validated['file_size'])) {
                     try {
@@ -233,7 +230,7 @@ class BookController extends Controller
                         $validated['file_size'] = $book->file_size;
                     }
                 }
-                $pdfPath = $pdfFile->store('books', 'public');
+                $pdfPath = StorageService::storePdf($pdfFile);
             }
 
             $book->update([
@@ -268,13 +265,8 @@ class BookController extends Controller
     {
         $book = Book::findOrFail($id);
 
-        if ($book->cover_image && ! Str::startsWith($book->cover_image, ['http://', 'https://'])) {
-            Storage::disk('public')->delete($book->cover_image);
-        }
-
-        if ($book->file_path && ! Str::startsWith($book->file_path, ['http://', 'https://'])) {
-            Storage::disk('public')->delete($book->file_path);
-        }
+        StorageService::deleteFile($book->cover_image);
+        StorageService::deleteFile($book->file_path);
 
         $book->delete();
 

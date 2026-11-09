@@ -71,7 +71,7 @@ class Book extends Model
             return $this->cover_image;
         }
 
-        return Storage::url($this->cover_image);
+        return \App\Services\StorageService::getFileUrl($this->cover_image);
     }
 
     public function getFileUrlAttribute(): ?string
@@ -84,7 +84,7 @@ class Book extends Model
             return $this->file_path;
         }
 
-        return Storage::url($this->file_path);
+        return \App\Services\StorageService::getFileUrl($this->file_path);
     }
 
     public function getPdfUrlAttribute(): ?string

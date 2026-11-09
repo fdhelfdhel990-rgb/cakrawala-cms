@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Book;
+use App\Services\StorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -160,58 +161,12 @@ class BookController extends Controller
 
     /**
      * Download or stream book PDF for the Android reader.
+     * Supports Cloudflare R2 temporary signed URLs and direct streaming.
      */
-    public function streamPdf(int $id): BinaryFileResponse|JsonResponse|RedirectResponse|Response
+    public function streamPdf(int $id): Response
     {
         $book = Book::findOrFail($id);
 
-        if (! empty($book->file_path) && Str::startsWith($book->file_path, ['http://', 'https://'])) {
-            return redirect()->away($book->file_path);
-        }
-
-        $resolvedPath = null;
-        $candidates = [
-            $book->file_path ? Storage::disk('public')->path($book->file_path) : null,
-            $book->file_path ? public_path($book->file_path) : null,
-            $book->file_path ? public_path('book/'.basename($book->file_path)) : null,
-            public_path('book/Filosofi Teras.pdf'),
-            public_path('book/filosofi_teras.pdf'),
-            storage_path('app/public/books/filosofi_teras.pdf'),
-            Storage::disk('public')->path('books/sample_pulang_pergi.pdf'),
-        ];
-
-        foreach ($candidates as $candidate) {
-            if ($candidate && file_exists($candidate) && is_file($candidate)) {
-                $resolvedPath = $candidate;
-                break;
-            }
-        }
-
-        // Jika masih belum ditemukan, coba cari file .pdf apa saja di folder public/book atau storage/app/public/books
-        if (! $resolvedPath) {
-            $publicBookFiles = glob(public_path('book/*.pdf'));
-            if (! empty($publicBookFiles)) {
-                $resolvedPath = $publicBookFiles[0];
-            } else {
-                $storageBookFiles = glob(storage_path('app/public/books/*.pdf'));
-                if (! empty($storageBookFiles)) {
-                    $resolvedPath = $storageBookFiles[0];
-                }
-            }
-        }
-
-        if (! $resolvedPath || ! file_exists($resolvedPath)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'File dokumen PDF buku belum tersedia.',
-            ], 404);
-        }
-
-        return response(file_get_contents($resolvedPath), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.($book->slug ?: 'dokumen-buku').'.pdf"',
-            'Access-Control-Allow-Origin' => '*',
-            'Content-Length' => filesize($resolvedPath),
-        ]);
+        return StorageService::deliverPdf($book);
     }
 }

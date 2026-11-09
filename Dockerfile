@@ -38,7 +38,8 @@ COPY . /app
 RUN dos2unix /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 # Install composer production dependencies without running artisan scripts during build
-RUN composer install \
+RUN composer update league/flysystem-aws-s3-v3 --no-dev --no-interaction --ignore-platform-reqs || \
+    composer install \
     --no-dev \
     --no-interaction \
     --prefer-dist \
