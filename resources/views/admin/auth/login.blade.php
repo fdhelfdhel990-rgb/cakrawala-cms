@@ -31,7 +31,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.login.submit') }}" method="POST" class="space-y-5">
+            <form method="POST" class="space-y-5">
                 @csrf
 
                 <!-- Form Email -->
