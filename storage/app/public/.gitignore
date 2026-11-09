@@ -1,0 +1,7 @@
+!.gitignore
+!banners/
+!banners/**
+!books/
+!books/**
+!covers/
+!covers/**

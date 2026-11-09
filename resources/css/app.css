@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+
+@source '../views/**/*.blade.php';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+:root {
+    --font-sans: 'Poppins', sans-serif;
+    --color-navy: #010134;
+    --color-primary: #1A43BF;
+    --color-surface: #FFFFFF;
+    --color-text-main: #292D39;
+    --color-text-muted: #6F7480;
+    --color-active-bg: #E8EEFB;
+    --card-radius: 16px;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --card-shadow-hover: 0 8px 24px rgba(26, 67, 191, 0.08);
+    --content-max-width: 1160px;
+    --page-gutter: 40px;
+    --page-section-space: clamp(32px, 4vw, 48px);
+    --page-title-size: clamp(26px, 2.6vw, 32px);
+    --page-scale: .92;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--color-text-main);
+    background-color: #F4F6FB;
+    zoom: var(--page-scale);
+}
+
+.container-custom {
+    max-width: var(--content-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--page-gutter);
+    padding-right: var(--page-gutter);
+    width: 100%;
+}
+
+.card-system {
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    background-color: var(--color-surface);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.2s ease;
+}
+
+.card-system:hover {
+    box-shadow: var(--card-shadow-hover);
+}
+
+@media (max-width: 900px) {
+    :root {
+        --page-gutter: 24px;
+    }
+}
+
+@media (max-width: 700px) {
+    :root {
+        --page-gutter: 16px;
+    }
+}
