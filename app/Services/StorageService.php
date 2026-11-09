@@ -111,6 +111,68 @@ class StorageService
     }
 
     /**
+     * Stream or deliver cover image directly from active storage (R2 or local).
+     */
+    public static function deliverCover(Book $book): Response
+    {
+        $path = $book->cover_image;
+
+        if (empty($path)) {
+            return response()->json(['message' => 'Cover tidak tersedia.'], 404);
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return redirect()->away($path);
+        }
+
+        return self::deliverFileByPath($path, 'image/jpeg');
+    }
+
+    /**
+     * Deliver any file safely by path from R2 or local disk.
+     */
+    public static function deliverFileByPath(string $path, ?string $fallbackMime = null): Response
+    {
+        // 1. Try from Cloudflare R2
+        if (self::isR2Configured()) {
+            try {
+                $r2 = Storage::disk('r2');
+                if ($r2->exists($path)) {
+                    $mime = $fallbackMime ?: ($r2->mimeType($path) ?: 'image/jpeg');
+                    $content = $r2->get($path);
+
+                    return response($content, 200, [
+                        'Content-Type' => $mime,
+                        'Cache-Control' => 'public, max-age=86400',
+                        'Access-Control-Allow-Origin' => '*',
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Gagal membaca file dari R2 [{$path}]: ".$e->getMessage());
+            }
+        }
+
+        // 2. Try from local public disk
+        try {
+            $pub = Storage::disk('public');
+            if ($pub->exists($path)) {
+                $fullPath = $pub->path($path);
+                $mime = $fallbackMime ?: (mime_content_type($fullPath) ?: 'image/jpeg');
+
+                return response(file_get_contents($fullPath), 200, [
+                    'Content-Type' => $mime,
+                    'Cache-Control' => 'public, max-age=86400',
+                    'Access-Control-Allow-Origin' => '*',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Gagal membaca file dari public [{$path}]: ".$e->getMessage());
+        }
+
+        return response()->json(['message' => 'File tidak ditemukan.'], 404);
+    }
+
+    /**
      * Generate a public or secure temporary URL for a file.
      */
     public static function getFileUrl(?string $path, int $expirationMinutes = 30): ?string

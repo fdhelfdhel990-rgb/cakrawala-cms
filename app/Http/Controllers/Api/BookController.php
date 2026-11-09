@@ -160,6 +160,16 @@ class BookController extends Controller
     }
 
     /**
+     * Stream or deliver book cover image directly from active storage (R2 or local).
+     */
+    public function streamCover(int $id): Response
+    {
+        $book = Book::findOrFail($id);
+
+        return StorageService::deliverCover($book);
+    }
+
+    /**
      * Download or stream book PDF for the Android reader.
      * Supports Cloudflare R2 temporary signed URLs and direct streaming.
      */

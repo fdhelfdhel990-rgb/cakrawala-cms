@@ -71,7 +71,7 @@ class Book extends Model
             return $this->cover_image;
         }
 
-        return \App\Services\StorageService::getFileUrl($this->cover_image);
+        return url('/api/books/'.$this->id.'/cover');
     }
 
     public function getFileUrlAttribute(): ?string
