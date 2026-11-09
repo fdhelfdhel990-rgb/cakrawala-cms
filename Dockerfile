@@ -19,8 +19,10 @@ RUN install-php-extensions \
     bcmath \
     mbstring
 
-# Install system dependencies (git for composer, dos2unix for Windows CRLF line endings)
-RUN apk add --no-cache dos2unix git
+# Install system dependencies (git for composer, dos2unix for Windows CRLF line endings, libcap for setcap)
+RUN apk add --no-cache dos2unix git libcap && \
+    (setcap -r /usr/local/bin/frankenphp 2>/dev/null || true) && \
+    (setcap -r $(which frankenphp) 2>/dev/null || true)
 
 WORKDIR /app
 

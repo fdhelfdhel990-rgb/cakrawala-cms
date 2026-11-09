@@ -23,5 +23,12 @@ echo "--> 5. Seeding default data if empty..."
 php artisan db:seed --force || true
 
 PORT_LISTEN="${PORT:-8000}"
-echo "--> 6. Starting FrankenPHP web server on port ${PORT_LISTEN}..."
-exec frankenphp php-server -l :${PORT_LISTEN} -r public/
+echo "--> 6. Starting web server on port ${PORT_LISTEN}..."
+
+if frankenphp --version > /dev/null 2>&1; then
+    echo "--> Running with FrankenPHP server..."
+    exec frankenphp php-server -l :${PORT_LISTEN} -r public/
+else
+    echo "--> [Notice] FrankenPHP binary restricted, falling back to Laravel native server..."
+    exec php artisan serve --host=0.0.0.0 --port=${PORT_LISTEN}
+fi
