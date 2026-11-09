@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        User::updateOrCreate(
+        User::firstOrCreate(
             ['email' => 'fdhelfdhel990@gmail.com'],
             [
                 'name' => 'Fadhel',
@@ -363,11 +363,17 @@ class DatabaseSeeder extends Seeder
         ];
 
         $books = [];
-        foreach ($booksData as $b) {
-            $books[$b['slug']] = Book::updateOrCreate(['slug' => $b['slug']], $b);
+        if (Book::count() === 0) {
+            foreach ($booksData as $b) {
+                $books[$b['slug']] = Book::create($b);
+            }
+        } else {
+            foreach (Book::all() as $existingBook) {
+                $books[$existingBook->slug] = $existingBook;
+            }
         }
 
-        // 5. Seed Articles & News
+        // 5. Seed Articles & News (Only when empty to preserve admin edits)
         $articlesData = [
             [
                 'title' => 'Program Literasi Digital Cakrawala Resmi Dibuka',
@@ -411,11 +417,13 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($articlesData as $art) {
-            Article::updateOrCreate(['slug' => $art['slug']], $art);
+        if (Article::count() === 0) {
+            foreach ($articlesData as $art) {
+                Article::firstOrCreate(['slug' => $art['slug']], $art);
+            }
         }
 
-        // 6. Seed Banners
+        // 6. Seed Banners (Only when empty to preserve admin edits)
         $bannersData = [
             [
                 'title' => 'Agenda Literasi Cakrawala',
@@ -437,77 +445,83 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($bannersData as $ban) {
-            Banner::updateOrCreate(['title' => $ban['title']], $ban);
+        if (Banner::count() === 0) {
+            foreach ($bannersData as $ban) {
+                Banner::firstOrCreate(['title' => $ban['title']], $ban);
+            }
         }
 
-        // 7. Seed Member's Bookshelf (Fadhel)
-        if (isset($books['pulang-pergi'])) {
-            Bookshelf::updateOrCreate(
-                [
-                    'user_id' => $member->id,
-                    'book_id' => $books['pulang-pergi']->id,
-                    'type' => 'reading',
-                ],
-                [
-                    'progress_percentage' => 5,
-                    'last_page_read' => 2,
-                    'last_read_at' => now(),
-                ]
-            );
+        // 7. Seed Member's Bookshelf (Fadhel) (Only when empty to preserve reading progress)
+        if (Bookshelf::count() === 0) {
+            if (isset($books['pulang-pergi'])) {
+                Bookshelf::firstOrCreate(
+                    [
+                        'user_id' => $member->id,
+                        'book_id' => $books['pulang-pergi']->id,
+                        'type' => 'reading',
+                    ],
+                    [
+                        'progress_percentage' => 5,
+                        'last_page_read' => 2,
+                        'last_read_at' => now(),
+                    ]
+                );
 
-            // Add Bookmark for Pulang-Pergi
-            Bookmark::updateOrCreate(
+                // Add Bookmark for Pulang-Pergi
+                Bookmark::firstOrCreate(
+                    [
+                        'user_id' => $member->id,
+                        'book_id' => $books['pulang-pergi']->id,
+                        'page_number' => 2,
+                    ],
+                    [
+                        'note' => 'Pembukaan bab pengkhianatan di Rusia',
+                    ]
+                );
+            }
+
+            if (isset($books['negeri-5-menara'])) {
+                Bookshelf::firstOrCreate(
+                    [
+                        'user_id' => $member->id,
+                        'book_id' => $books['negeri-5-menara']->id,
+                        'type' => 'wishlist',
+                    ],
+                    [
+                        'progress_percentage' => 0,
+                        'last_page_read' => 1,
+                    ]
+                );
+            }
+
+            if (isset($books['rantau-1-muara'])) {
+                Bookshelf::firstOrCreate(
+                    [
+                        'user_id' => $member->id,
+                        'book_id' => $books['rantau-1-muara']->id,
+                        'type' => 'wishlist',
+                    ],
+                    [
+                        'progress_percentage' => 0,
+                        'last_page_read' => 1,
+                    ]
+                );
+            }
+        }
+
+        // 8. Seed Reviews (Only when empty)
+        if (Review::count() === 0) {
+            Review::firstOrCreate(
                 [
                     'user_id' => $member->id,
-                    'book_id' => $books['pulang-pergi']->id,
-                    'page_number' => 2,
+                    'book_id' => null, // General app review as seen on the profile mockup
                 ],
                 [
-                    'note' => 'Pembukaan bab pengkhianatan di Rusia',
+                    'rating' => 5,
+                    'comment' => 'EPerpus Cakrawala sangat membantu dan membaca buku terasa nyaman sekali! Pengalaman membaca digital jadi luar biasa.',
+                    'is_visible' => true,
                 ]
             );
         }
-
-        if (isset($books['negeri-5-menara'])) {
-            Bookshelf::updateOrCreate(
-                [
-                    'user_id' => $member->id,
-                    'book_id' => $books['negeri-5-menara']->id,
-                    'type' => 'wishlist',
-                ],
-                [
-                    'progress_percentage' => 0,
-                    'last_page_read' => 1,
-                ]
-            );
-        }
-
-        if (isset($books['rantau-1-muara'])) {
-            Bookshelf::updateOrCreate(
-                [
-                    'user_id' => $member->id,
-                    'book_id' => $books['rantau-1-muara']->id,
-                    'type' => 'wishlist',
-                ],
-                [
-                    'progress_percentage' => 0,
-                    'last_page_read' => 1,
-                ]
-            );
-        }
-
-        // 8. Seed Reviews
-        Review::updateOrCreate(
-            [
-                'user_id' => $member->id,
-                'book_id' => null, // General app review as seen on the profile mockup
-            ],
-            [
-                'rating' => 5,
-                'comment' => 'EPerpus Cakrawala sangat membantu dan membaca buku terasa nyaman sekali! Pengalaman membaca digital jadi luar biasa.',
-                'is_visible' => true,
-            ]
-        );
     }
 }
