@@ -84,12 +84,12 @@ class Book extends Model
             return $this->file_path;
         }
 
-        return \App\Services\StorageService::getFileUrl($this->file_path);
+        return url('/api/books/'.$this->id.'/pdf');
     }
 
     public function getPdfUrlAttribute(): ?string
     {
-        return $this->file_url;
+        return $this->getFileUrlAttribute();
     }
 
     public function getPagesAttribute(): string

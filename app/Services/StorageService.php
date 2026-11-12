@@ -223,30 +223,27 @@ class StorageService
             return redirect()->away($path);
         }
 
-        // 2. Cloudflare R2 Delivery
+        // 2. Cloudflare R2 Delivery (Direct streaming from R2 via authenticated SDK)
         if (self::isR2Configured() && ! empty($path)) {
             try {
                 $r2Disk = Storage::disk('r2');
                 if ($r2Disk->exists($path)) {
-                    // Try temporary signed URL (valid for 15 minutes)
-                    try {
-                        $signedUrl = $r2Disk->temporaryUrl($path, now()->addMinutes(15));
-                        return redirect()->away($signedUrl);
-                    } catch (\Throwable $signedEx) {
-                        // If signed URL not supported by bucket config, stream directly from R2
-                        $stream = $r2Disk->readStream($path);
-                        $fileSize = $r2Disk->size($path);
+                    $stream = $r2Disk->readStream($path);
+                    $fileSize = $r2Disk->size($path);
 
-                        return response()->stream(function () use ($stream) {
-                            fpassthru($stream);
-                        }, 200, [
-                            'Content-Type' => 'application/pdf',
-                            'Content-Disposition' => 'inline; filename="'.($book->slug ?: 'dokumen-buku').'.pdf"',
-                            'Content-Length' => $fileSize,
-                            'Access-Control-Allow-Origin' => '*',
-                            'Cache-Control' => 'private, max-age=900',
-                        ]);
-                    }
+                    return response()->stream(function () use ($stream) {
+                        fpassthru($stream);
+                        if (is_resource($stream)) {
+                            fclose($stream);
+                        }
+                    }, 200, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="'.($book->slug ?: 'dokumen-buku').'.pdf"',
+                        'Content-Length' => $fileSize,
+                        'Accept-Ranges' => 'bytes',
+                        'Access-Control-Allow-Origin' => '*',
+                        'Cache-Control' => 'private, max-age=900',
+                    ]);
                 }
             } catch (\Throwable $e) {
                 Log::warning("Gagal mengakses file PDF dari R2 untuk buku [{$book->id}]: ".$e->getMessage());
