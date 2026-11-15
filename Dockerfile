@@ -37,15 +37,13 @@ COPY . /app
 # Ensure entrypoint script has execution permissions and LF line endings
 RUN dos2unix /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
-# Install composer production dependencies without running artisan scripts during build
-RUN composer update league/flysystem-aws-s3-v3 --no-dev --no-interaction --ignore-platform-reqs || \
-    composer install \
+# Install the exact production dependencies recorded in composer.lock.
+RUN composer install \
     --no-dev \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
-    --no-scripts \
-    --ignore-platform-reqs
+    --no-scripts
 
 # Set up writable permissions for Laravel storage and cache
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache && \

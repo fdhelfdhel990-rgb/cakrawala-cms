@@ -16,14 +16,11 @@ php artisan package:discover --ansi || true
 echo "--> 3. Ensuring storage symlink exists..."
 php artisan storage:link || true
 
-echo "--> 4. Running database migrations on Neon.tech..."
-php artisan migrate --force || true
-
-echo "--> 5. Seeding default data if empty..."
-php artisan db:seed --force || true
+echo "--> Database migrations and seeding are not run automatically."
+echo "--> Apply schema changes only through an approved release step."
 
 PORT_LISTEN="${PORT:-8000}"
-echo "--> 6. Starting web server on port ${PORT_LISTEN}..."
+echo "--> Starting web server on port ${PORT_LISTEN}..."
 
 if frankenphp --version > /dev/null 2>&1; then
     echo "--> Running with FrankenPHP server..."

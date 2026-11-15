@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public Auth Endpoints
 Route::prefix('auth')->group(function () {
-    Route::post('/firebase-login', [AuthController::class, 'firebaseLogin']);
+    Route::post('/firebase-login', [AuthController::class, 'firebaseLogin'])->middleware('throttle:10,1');
 });
 
 // Public Discovery & Content Endpoints
