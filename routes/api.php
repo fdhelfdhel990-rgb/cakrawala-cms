@@ -20,9 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public Auth Endpoints
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/google-login', [AuthController::class, 'googleLogin']);
+    Route::post('/firebase-login', [AuthController::class, 'firebaseLogin']);
 });
 
 // Public Discovery & Content Endpoints
@@ -50,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/shelf', [ShelfController::class, 'index']);
     Route::post('/shelf/wishlist/toggle', [ShelfController::class, 'toggleWishlist']);
     Route::post('/shelf/progress', [ShelfController::class, 'updateProgress']);
+    Route::delete('/shelf/reading/{bookId}', [ShelfController::class, 'hideReadingBookFromShelf']);
     Route::delete('/shelf/{id}', [ShelfController::class, 'destroy']);
 
     // PDF Reader Bookmarks

@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Book;
 use App\Models\User;
+use App\Services\FirebaseIdTokenVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
 use Tests\TestCase;
 
 class MobileApiTest extends TestCase
@@ -73,9 +75,19 @@ class MobileApiTest extends TestCase
 
     public function test_api_mobile_user_login(): void
     {
-        $response = $this->postJson('/api/auth/login', [
+        $verifier = Mockery::mock(FirebaseIdTokenVerifier::class);
+        $verifier->shouldReceive('verify')->once()->with('firebase-id-token')->andReturn([
+            'sub' => 'mobile-firebase-uid',
             'email' => 'fadhel@gmail.com',
-            'password' => 'password123',
+            'email_verified' => true,
+            'name' => 'Fadhel Akbar',
+            'firebase' => ['sign_in_provider' => 'password'],
+        ]);
+        $this->app->instance(FirebaseIdTokenVerifier::class, $verifier);
+
+        $response = $this->postJson('/api/auth/firebase-login', [
+            'id_token' => 'firebase-id-token',
+            'existing_account_password' => 'password123',
         ]);
 
         $response->assertStatus(200)

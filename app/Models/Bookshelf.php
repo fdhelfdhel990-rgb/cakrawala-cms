@@ -14,6 +14,7 @@ class Bookshelf extends Model
         'user_id',
         'book_id',
         'type',
+        'is_visible',
         'progress_percentage',
         'last_page_read',
         'last_read_at',
@@ -25,6 +26,7 @@ class Bookshelf extends Model
             'progress_percentage' => 'integer',
             'last_page_read' => 'integer',
             'last_read_at' => 'datetime',
+            'is_visible' => 'boolean',
         ];
     }
 

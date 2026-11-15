@@ -19,6 +19,7 @@ class ShelfController extends Controller
         $type = $request->query('type'); // 'reading', 'wishlist', or null for both
 
         $query = $user->bookshelves()->with('book.category');
+        $query->where('is_visible', true);
 
         if ($type) {
             $query->where('type', $type);
@@ -105,6 +106,7 @@ class ShelfController extends Controller
                 'last_page_read' => $lastPageRead,
                 'progress_percentage' => min(100, max(0, $progressPercentage ?? 0)),
                 'last_read_at' => now(),
+                'is_visible' => true,
             ]
         );
 
@@ -122,11 +124,32 @@ class ShelfController extends Controller
     {
         $user = $request->user();
         $shelf = $user->bookshelves()->findOrFail($id);
-        $shelf->delete();
+        if ($shelf->type === 'reading') {
+            $shelf->update(['is_visible' => false]);
+        } else {
+            $shelf->delete();
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Konten berhasil dihapus dari rak',
+        ]);
+    }
+
+    /**
+     * Remove a book from the authenticated user's reading history.
+     */
+    public function hideReadingBookFromShelf(Request $request, int $bookId): JsonResponse
+    {
+        $hidden = $request->user()->bookshelves()
+            ->where('book_id', $bookId)
+            ->where('type', 'reading')
+            ->update(['is_visible' => false]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Buku dihapus dari Rak Saya. Progres baca tetap tersimpan.',
+            'hidden' => $hidden > 0,
         ]);
     }
 }

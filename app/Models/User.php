@@ -27,6 +27,8 @@ class User extends Authenticatable
         'role',
         'avatar',
         'google_id',
+        'firebase_uid',
+        'firebase_provider',
         'membership_status',
         'reason',
         'admin_level',
